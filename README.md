@@ -15,29 +15,38 @@
  ssh -i xxx.pem id@ip
  ```
 
+## SSH 접속 시 권한 문제 발생시 해결 방법
+```
+chomd 600 xxx.pem
+```
+* 참고 : https://naleejang.tistory.com/40
 
- # System Pre-configuration Checks
+
+# System Pre-configuration Checks
 
 
- 1. Update yum
+ ## 1. Update yum
 ```
  sudo yum update -y
 ```
 
- 2. Change the run level to multi-user text mode
+## 2. Change the run level to multi-user text mode
  ```
  # 현재 세팅 확인
  sudo systemctl get-default
  # 세팅 변경
  sudo systemctl set-default multi-user.target
  ```
+## 3. Disable SE Linux
+```
+sudo vi/etc/sysconfig/selinux
+# 아래 속성값 변경
+SELINUX=enforce -> SELINUX=disabled
+# 서버 재시작
+reboot
+```
 
-
-
-
- 3. Disable SE Linux
-
- 4. Disable firewall
+## 4. Disable firewall
 
  5. Check vm.swappiness and update permanently as necessary.
 
