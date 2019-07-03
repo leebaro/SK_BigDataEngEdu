@@ -224,20 +224,14 @@ sudo yum install MariaDB or sudo yum clean all
 ```
 참조 : https://zetawiki.com/wiki/CentOS7_MariaDB_%EC%84%A4%EC%B9%98
 
-
-On the host that you will install CM:
-Configure the repository for CM 5.15.2
-Install CM
-Install and enable Maria DB (or a DB of your choice)
-▪ Don’t forget to secure your DB installation
-▪ You can refer to instructions below for more
+* On the host that you will install CM:
+  * Configure the [repository](https://www.cloudera.com/documentation/enterprise/5-15-x/topics/configure_cm_repo.html) for CM 5.15.2
+  * Install CM
+  * Install and enable Maria DB (or a DB of your choice)
+    * Don’t forget to secure your DB installation
+    * You can refer to instructions below for more
 details on installing Maria DB
- •
-•
-•
-   o o o
-o o
-o
+
 Install the mysql connector or mariadb connector Create the necessary users and databases
 ▪ Grant them the necessary rights Setup the CM database
     •
