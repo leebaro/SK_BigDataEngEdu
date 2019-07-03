@@ -107,8 +107,11 @@ BOOT_IMAGE=/vmlinuz-3.10.0-514.10.2.el7.x86_64 root=/dev/mapper/vg_os-lv_root ro
 
 5. 정상 변경 여부 확인
 ```
+sudo su
+sudo echo never > /sys/kernel/mm/transparent_hugepage/enabled
+sudo reboot
+#다시 ssh 접속 후
 cat /sys/kernel/mm/transparent_hugepage/enabled
-#never가 나오면 정상
 ```
 * 참고  
 https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-transparent-huge-pages-thp/
