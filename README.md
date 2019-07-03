@@ -72,18 +72,45 @@ sudo sysctl -w vm.swappiness=1
 
 ## 6. Disable transparent hugepage support permanently
 
+1. Add the “transparent_hugepage=never” kernel parameter option to the grub2 configuration file. Append or change the “transparent_hugepage=never” kernel parameter on the GRUB_CMDLINE_LINUX option in /etc/default/grub file.
+
 ```
-vi /etc/grub.conf
+# vi /etc/default/grub
+GRUB_TIMEOUT=5
+GRUB_DEFAULT=saved
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT="console"
+GRUB_CMDLINE_LINUX="nomodeset crashkernel=auto rd.lvm.lv=vg_os/lv_root rd.lvm.lv=vg_os/lv_swap rhgb quiet transparent_hugepage=never"
+GRUB_DISABLE_RECOVERY="true"
+```
 
-kernal 뒤에 ‘transparent_hugepage=never’추가
+2. Rebuild the /boot/grub2/grub.cfg file by running the grub2-mkconfig -o command. Before rebuilding the GRUB2 configuration file, ensure to take a backup of the existing /boot/grub2/grub.cfg.
+On BIOS-based machines
 
+```
 grub2-mkconfig -o /boot/grub2/grub.cfg
-
-echo never > /sys/kernel/mm/transparent_hugepage/enabled
-
-cat /sys/kernel/mm/transparent_hugepage/enabled 에서
-[never]에 이렇게 닫혀있는지 확인하시면 잘된 것임
 ```
+
+  ### On UEFI-based machines
+```
+ grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
+```
+
+3. Reboot the system and verify option are in effect.
+
+```
+shutdown -r now
+```
+
+4. Verify the parameter is set correctly
+
+```
+# cat /proc/cmdline
+BOOT_IMAGE=/vmlinuz-3.10.0-514.10.2.el7.x86_64 root=/dev/mapper/vg_os-lv_root ro nomodeset crashkernel=auto rd.lvm.lv=vg_os/lv_root rd.lvm.lv=vg_os/lv_swap rhgb quiet transparent_hugepage=never LANG=en_US.UTF-8
+```
+
+* 참고  
+https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-transparent-huge-pages-thp/
 
 ## 7. Check to see that nscd service is running
 ```
