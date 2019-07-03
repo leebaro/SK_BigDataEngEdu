@@ -181,7 +181,7 @@ sudo vi /private/etc/hosts
 ```
 
 
-## 12.Change the hostname of each of the nodes to match the FQDN that you entered in the /etc/hosts file.
+### 12.Change the hostname of each of the nodes to match the FQDN that you entered in the /etc/hosts file.
 모든 서버의 hosts 파일 업데이트
 ```
 # 서버에서는 private ip를 사용해야함
@@ -209,9 +209,10 @@ sudo yum install java-1.8.0-openjdk-devel
 참고 : https://www.digitalocean.com/community/tutorials/how-to-install-java-on-centos-and-fedora
 
 
-## Install a supported JDBC mysql connector or mariadb connector on all nodes
+## Install a supported JDBC [mysql connector](https://dev.mysql.com/downloads/connector/j/5.1.html) or [mariadb connector](https://downloads.mariadb.org/connector-java/) on all nodes
+mariadb는 cm에만 설치하면 됨
 ```
-# vi /etc/yum.repos.d/MariaDB.repo
+# sudo vi /etc/yum.repos.d/MariaDB.repo
 
 [mariadb]
 name = MariaDB
@@ -219,7 +220,7 @@ baseurl = http://yum.mariadb.org/10.4/centos7-amd64
 gpgkey=https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
 gpgcheck=1
 
-yum install MariaDB or yum clean all
+sudo yum install MariaDB or sudo yum clean all
 ```
 참조 : https://zetawiki.com/wiki/CentOS7_MariaDB_%EC%84%A4%EC%B9%98
 
