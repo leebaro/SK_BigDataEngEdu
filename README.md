@@ -73,7 +73,6 @@ sudo sysctl -w vm.swappiness=1
 ## 6. Disable transparent hugepage support permanently
 
 1. Add the “transparent_hugepage=never” kernel parameter option to the grub2 configuration file. Append or change the “transparent_hugepage=never” kernel parameter on the GRUB_CMDLINE_LINUX option in /etc/default/grub file.
-
 ```
 # vi /etc/default/grub
 GRUB_TIMEOUT=5
@@ -86,29 +85,31 @@ GRUB_DISABLE_RECOVERY="true"
 
 2. Rebuild the /boot/grub2/grub.cfg file by running the grub2-mkconfig -o command. Before rebuilding the GRUB2 configuration file, ensure to take a backup of the existing /boot/grub2/grub.cfg.
 On BIOS-based machines
-
 ```
 grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
-  ### On UEFI-based machines
+2. On UEFI-based machines(redhat일 경우만, 아니면 3번으로 넘어감)
 ```
  grub2-mkconfig -o /boot/efi/EFI/redhat/grub.cfg
 ```
 
 3. Reboot the system and verify option are in effect.
-
 ```
 shutdown -r now
 ```
 
 4. Verify the parameter is set correctly
-
 ```
 # cat /proc/cmdline
 BOOT_IMAGE=/vmlinuz-3.10.0-514.10.2.el7.x86_64 root=/dev/mapper/vg_os-lv_root ro nomodeset crashkernel=auto rd.lvm.lv=vg_os/lv_root rd.lvm.lv=vg_os/lv_swap rhgb quiet transparent_hugepage=never LANG=en_US.UTF-8
 ```
 
+5. 정상 변경 여부 확인
+```
+cat /sys/kernel/mm/transparent_hugepage/enabled
+#never가 나오면 정상
+```
 * 참고  
 https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-transparent-huge-pages-thp/
 
@@ -138,6 +139,22 @@ shutdown -r now
 * 참고 : https://www.thegeekdiary.com/centos-rhel-7-how-to-disable-ipv6/
 
 ## 10.During the installation process, Cloudera Manager Server will need to remotely access each of the remaining nodes. In order to facilitate this, you may either set up an admin user and password to be used by Cloudera Manager Server or setup a private/public key access. Whichever method you choose, make sure you test access with ssh before proceeding.
+
+* 아이디/패스워드를 모든 서버에 동일하게 설정(실습에선 centos 계정을 사용
+* key를 이용하는 경우 잘 안되는 경우가 있음. 모든 서버에 한 번씩 미리 접속해보면 접속 기록이 남아서 문제가 해결될 경우도 있음
+
+```
+# 비밀번호 변경
+passwd centos
+
+sudo vi /etc/ssh/sshd_config
+PasswordAuthentication=yes
+reboot
+```
+ssh 시 key없애고 패스워드로 로그인 확인  
+참고 : https://aws.amazon.com/ko/premiumsupport/knowledge-center/ec2-password-login/  
+/etc/ssh/sshd_config
+
 
 ## 11.Show that forward and reverse host lookups are correctly resolved
 
