@@ -23,7 +23,10 @@ chomd 600 xxx.pem
 
 
 # System Pre-configuration Checks
-
+```
+# 고려사항
+6단계 이전에 reboot 할 경우 변경한 설정 값이 초기화 됨
+```
 
  ## 1. Update yum
 ```
@@ -39,11 +42,9 @@ chomd 600 xxx.pem
  ```
 ## 3. Disable SE Linux
 ```
-sudo vi/etc/sysconfig/selinux
+sudo vi /etc/sysconfig/selinux
 # 아래 속성값 변경
 SELINUX=enforce -> SELINUX=disabled
-# 서버 재시작
-reboot
 ```
 
 ## 4. Disable firewall
