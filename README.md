@@ -97,20 +97,22 @@ systemctl status nscd
 yum install ntp
 # 확인
 rpm -qa ntp
-
 ```
- 9. Disable IPV6
+## 9. Disable IPV6
+```
+vi /etc/default/grub
 
- 10.During the installation process, Cloudera Manager Server will need to remotely access each of the remaining nodes. In order to facilitate this, you may either set up an admin user and password to be used by Cloudera Manager Server or setup a private/public key access. Whichever method you choose, make sure you test access with ssh before proceeding.
+GRUB_CMDLINE_LINUX=“ipv6.disable=1 ’ 추가
+```
 
- 11.Show that forward and reverse host lookups are correctly resolved
+## 10.During the installation process, Cloudera Manager Server will need to remotely access each of the remaining nodes. In order to facilitate this, you may either set up an admin user and password to be used by Cloudera Manager Server or setup a private/public key access. Whichever method you choose, make sure you test access with ssh before proceeding.
 
- In this lab, we will use /etc/hosts Files setting to accomplish this
+## 11.Show that forward and reverse host lookups are correctly resolved
 
- Add the necessary information to the /etc/hosts files Check to make sure that File lookup has priority
+*  In this lab, we will use /etc/hosts Files setting to accomplish this
+* Add the necessary information to the /etc/hosts files Check to make sure that File lookup has priority
 
- Use getent to make sure you are getting proper host name and ip address
+* Use getent to make sure you are getting proper host name and ip address
 
- 12.Change the hostname of each of the nodes to match the FQDN that you entered in the /etc/hosts file.
-
- Reboot each of the nodes
+# 12.Change the hostname of each of the nodes to match the FQDN that you entered in the /etc/hosts file.
+* Reboot each of the nodes
