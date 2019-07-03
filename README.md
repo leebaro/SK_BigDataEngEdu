@@ -76,6 +76,8 @@ vi /etc/grub.conf
 
 kernal 뒤에 ‘transparent_hugepage=never’추가
 
+grub2-mkconfig -o /boot/grub2/grub.cfg
+
 echo never > /sys/kernel/mm/transparent_hugepage/enabled
 
 cat /sys/kernel/mm/transparent_hugepage/enabled 에서
