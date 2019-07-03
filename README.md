@@ -73,6 +73,7 @@ sudo sysctl -w vm.swappiness=1
 ## 6. Disable transparent hugepage support permanently
 
 1. Add the “transparent_hugepage=never” kernel parameter option to the grub2 configuration file. Append or change the “transparent_hugepage=never” kernel parameter on the GRUB_CMDLINE_LINUX option in /etc/default/grub file.
+아래 코드에 "transparent_hugepage=never" 부분만 추가하면 됨
 ```
 # vi /etc/default/grub
 GRUB_TIMEOUT=5
@@ -86,7 +87,7 @@ GRUB_DISABLE_RECOVERY="true"
 2. Rebuild the /boot/grub2/grub.cfg file by running the grub2-mkconfig -o command. Before rebuilding the GRUB2 configuration file, ensure to take a backup of the existing /boot/grub2/grub.cfg.
 On BIOS-based machines
 ```
-grub2-mkconfig -o /boot/grub2/grub.cfg
+sudo grub2-mkconfig -o /boot/grub2/grub.cfg
 ```
 
 2. On UEFI-based machines(redhat일 경우만, 아니면 3번으로 넘어감)
@@ -96,7 +97,7 @@ grub2-mkconfig -o /boot/grub2/grub.cfg
 
 3. Reboot the system and verify option are in effect.
 ```
-shutdown -r now
+sudo shutdown -r now
 ```
 
 4. Verify the parameter is set correctly
@@ -151,7 +152,7 @@ shutdown -r now
 passwd centos
 
 sudo vi /etc/ssh/sshd_config
-PasswordAuthentication=yes
+PasswordAuthentication yes
 reboot
 ```
 ssh 시 key없애고 패스워드로 로그인 확인  
