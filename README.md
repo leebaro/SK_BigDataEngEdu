@@ -227,16 +227,204 @@ sudo yum install MariaDB or sudo yum clean all
 
 ### connector 설치
 ```
-sudo yum install wget
+# https://www.cloudera.com/documentation/enterprise/5-15-x/topics/install_cm_mariadb.html
+# https://dev.mysql.com/downloads/connector/j/5.1.html에서 파일 다운로드 후 각 노드에 복사, 아래와 같이 wget으로 하면 됨
 
-wget https://downloads.mariadb.com/Connectors/java/latest/mariadb-java-client-2.3.0.jar
+# connector 다운로드
+wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.47.tar.gz
 
-cp -a mariadb-java-client-2.3.0.jar /usr/lib/jvm/java/jre/lib/ext/
+# 압축 풀기
+tar zxvf mysql-connector-java-5.1.47.tar.gz
+
+# 파일 복사
+sudo cp mysql-connector-java-5.1.47/mysql-connector-java-5.1.47.jar /usr/share/java/mysql-connector-java.jar
+
+# 파일 확인
+sudo ls /usr/share/java/
+
 ```
 참고  
 https://xinet.kr/?p=1600
-* On the host that you will install CM:
+
+
+### On the host that you will install CM:
+#### Step 1: Configure a Repository for Cloudera Manager
+
   * Configure the [repository](https://www.cloudera.com/documentation/enterprise/5-15-x/topics/configure_cm_repo.html) for CM 5.15.2
+
+```
+# sudo wget <repo_file_url> -P /etc/yum.repos.d/
+sudo wget https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo -P /etc/yum.repos.d/
+
+sudo rpm --import https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/RPM-GPG-KEY-cloudera
+```
+
+#### Step 2: Install Java Development Kit
+https://www.cloudera.com/documentation/enterprise/5-15-x/topics/cdh_ig_jdk_installation.html
+
+#### Step 3: Install Cloudera Manager Server
+```
+sudo yum install cloudera-manager-daemons cloudera-manager-server
+```
+
+#### Step 4: Install and Configure MariaDB for Cloudera Software
+https://www.cloudera.com/documentation/enterprise/5-15-x/topics/install_cm_mariadb.html#install_cm_mariadb
+
+##### Configuring and Starting the MariaDB Server
+```
+sudo systemctl stop mariadb
+```
+
+아래 내용 추가
+```
+# sudo vi /etc/my.cnf
+
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+transaction-isolation = READ-COMMITTED
+# Disabling symbolic-links is recommended to prevent assorted security risks;
+# to do so, uncomment this line:
+symbolic-links = 0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+
+key_buffer = 16M
+key_buffer_size = 32M
+max_allowed_packet = 32M
+thread_stack = 256K
+thread_cache_size = 64
+query_cache_limit = 8M
+query_cache_size = 64M
+query_cache_type = 1
+
+max_connections = 550
+#expire_logs_days = 10
+#max_binlog_size = 100M
+
+#log_bin should be on a disk with enough free space.
+#Replace '/var/lib/mysql/mysql_binary_log' with an appropriate path for your
+#system and chown the specified folder to the mysql user.
+log_bin=/var/lib/mysql/mysql_binary_log
+
+#In later versions of MariaDB, if you enable the binary log and do not set
+#a server_id, MariaDB will not start. The server_id must be unique within
+#the replicating group.
+server_id=1
+
+binlog_format = mixed
+
+read_buffer_size = 2M
+read_rnd_buffer_size = 16M
+sort_buffer_size = 8M
+join_buffer_size = 8M
+
+# InnoDB settings
+innodb_file_per_table = 1
+innodb_flush_log_at_trx_commit  = 2
+innodb_log_buffer_size = 64M
+innodb_buffer_pool_size = 4G
+innodb_thread_concurrency = 8
+innodb_flush_method = O_DIRECT
+innodb_log_file_size = 512M
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+```
+
+Ensure the MariaDB server starts at boot:
+```
+sudo systemctl enable mariadb
+```
+
+Start the MariaDB server:
+```
+sudo systemctl start mariadb
+```
+
+Run /usr/bin/mysql_secure_installation to set the MariaDB root password and other security-related settings. In a new installation, the root password is blank. Press the Enter key when you're prompted for the root password. For the rest of the prompts, enter the responses listed below in bold:
+```
+sudo /usr/bin/mysql_secure_installation
+```
+
+```
+[...]
+Enter current password for root (enter for none):
+OK, successfully used password, moving on...
+[...]
+Set root password? [Y/n] Y
+New password:
+Re-enter new password:
+[...]
+Remove anonymous users? [Y/n] Y
+[...]
+Disallow root login remotely? [Y/n] N
+[...]
+Remove test database and access to it [Y/n] Y
+[...]
+Reload privilege tables now? [Y/n] Y
+[...]
+All done!  If you've completed all of the above steps, your MariaDB
+installation should now be secure.
+
+Thanks for using MariaDB!
+```
+
+#### Creating Databases for Cloudera Software
+
+1. Log in as the root user, or another user with privileges to create database and grant privileges:
+```
+mysql -u root -p
+```
+
+```
+-- services
+-- Cloudera Manager Server	scm	scm
+-- Activity Monitor	amon	amon
+-- Reports Manager	rman	rman
+-- Hue	hue	hue
+-- Hive Metastore Server	metastore	hive
+-- Sentry Server	sentry	sentry
+-- Cloudera Navigator Audit Server	nav	nav
+-- Cloudera Navigator Metadata Server	navms	navms
+-- Oozie	oozie	oozie
+
+CREATE DATABASE scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE amon DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE rman DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE hue DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE metastore DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE sentry DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE nav DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE navms DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+CREATE DATABASE oozie DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+
+GRANT ALL ON scm.* TO 'scm'@'%' IDENTIFIED BY 'scm';
+GRANT ALL ON amon.* TO 'amon'@'%' IDENTIFIED BY 'amon';
+GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY 'rman';
+GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY 'hue';
+GRANT ALL ON metastore.* TO 'hive'@'%' IDENTIFIED BY 'hive';
+GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY 'sentry';
+GRANT ALL ON nav.* TO 'nav'@'%' IDENTIFIED BY 'nav';
+GRANT ALL ON navms.* TO 'navms'@'%' IDENTIFIED BY 'navms';
+GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY 'oozie';
+
+SHOW DATABASES;
+SHOW GRANTS FOR 'hive'@'%';
+```
+
+Start CM
+preparing the Cloudera Manager Server Database
+
+Step 6: Install CDH and Other Software
+https://www.cloudera.com/documentation/enterprise/5-15-x/topics/install_software_cm_wizard.html
+```
+sudo /usr/share/cmf/schema/scm_prepare_database.sh mysql scm scm
+sudo rm /etc/cloudera-scm-server/db.mgmt.properties
+```
   * Install CM
   * Install and enable Maria DB (or a DB of your choice)
     * Don’t forget to secure your DB installation
