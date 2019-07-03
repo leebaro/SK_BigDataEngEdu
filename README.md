@@ -47,7 +47,7 @@ reboot
 ```
 
 ## 4. Disable firewall
-방화벽 설정이 되어있지 않다면 이 단계는 건너띄면
+방화벽 설정이 되어있지 않다면 이 단계는 건너띄면 됨
 ```
 sudo yum install firewalld
 sudo systemctl unmask firewalld
