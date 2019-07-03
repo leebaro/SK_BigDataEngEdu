@@ -47,21 +47,58 @@ reboot
 ```
 
 ## 4. Disable firewall
+방화벽 설정이 되어있지 않다면 이 단계는 건너띄면
+```
+sudo yum install firewalld
+sudo systemctl unmask firewalld
+sudo systemctl enable firewalld
+sudo systemctl start firewalld
+sudo systemctl disable firewalld
+```
+* 참고 : systemctl stop firewalld
 
- 5. Check vm.swappiness and update permanently as necessary.
+
+## 5. Check vm.swappiness and update permanently as necessary.
 
  Set the value to 1
 
-
- sudo sysctl -w vm.swappiness=1
- 참고
+```
+sudo sysctl -w vm.swappiness=1
+```
+* 참고
  https://unix.stackexchange.com/questions/123074/does-changing-of-the-swappiness-need-a-reboot
 
 
- 6. Disable transparent hugepage support permanently
+## 6. Disable transparent hugepage support permanently
 
- 7. Check to see that nscd service is running
- 8. Check to see that ntp service is running Disable chrony as necessary
+```
+vi /etc/grub.conf
+
+kernal 뒤에 ‘transparent_hugepage=never’추가
+
+echo never > /sys/kernel/mm/transparent_hugepage/enabled
+
+cat /sys/kernel/mm/transparent_hugepage/enabled 에서
+[never]에 이렇게 닫혀있는지 확인하시면 잘된 것임
+```
+
+## 7. Check to see that nscd service is running
+```
+yum install nscd
+
+systemctl start nscd
+
+#확인
+systemctl status nscd
+```
+
+## 8. Check to see that ntp service is running Disable chrony as necessary
+```
+yum install ntp
+# 확인
+rpm -qa ntp
+
+```
  9. Disable IPV6
 
  10.During the installation process, Cloudera Manager Server will need to remotely access each of the remaining nodes. In order to facilitate this, you may either set up an admin user and password to be used by Cloudera Manager Server or setup a private/public key access. Whichever method you choose, make sure you test access with ssh before proceeding.
