@@ -210,6 +210,7 @@ sudo yum install java-1.8.0-openjdk-devel
 
 
 ## Install a supported JDBC [mysql connector](https://dev.mysql.com/downloads/connector/j/5.1.html) or [mariadb connector](https://downloads.mariadb.org/connector-java/) on all nodes
+### MariaDB 설치
 mariadb는 cm에만 설치하면 됨
 ```
 # sudo vi /etc/yum.repos.d/MariaDB.repo
@@ -224,6 +225,16 @@ sudo yum install MariaDB or sudo yum clean all
 ```
 참조 : https://zetawiki.com/wiki/CentOS7_MariaDB_%EC%84%A4%EC%B9%98
 
+### connector 설치
+```
+sudo yum install wget
+
+wget https://downloads.mariadb.com/Connectors/java/latest/mariadb-java-client-2.3.0.jar
+
+cp -a mariadb-java-client-2.3.0.jar /usr/lib/jvm/java/jre/lib/ext/
+```
+참고  
+https://xinet.kr/?p=1600
 * On the host that you will install CM:
   * Configure the [repository](https://www.cloudera.com/documentation/enterprise/5-15-x/topics/configure_cm_repo.html) for CM 5.15.2
   * Install CM
