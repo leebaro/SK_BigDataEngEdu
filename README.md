@@ -132,15 +132,16 @@ sudo vi /private/etc/hosts
 
 
 # 12.Change the hostname of each of the nodes to match the FQDN that you entered in the /etc/hosts file.
-
+모든 서버의 hosts 파일 업데이트
 ```
+# 서버에서는 private ip를 사용해야함
 sudo vi /private/etc/hosts
 
-13.125.84.13    cm.bdai.com cm
-13.125.92.82    m1.bdai.com m1
-13.209.123.110  d1.bdai.com d1
-13.209.220.119  d2.bdai.com d2
-13.209.55.218   d3.bdai.com d3
+12.172.31.1.187   cm.bdai.com cm
+172.31.2.44       m1.bdai.com m1
+172.31.8.54       d1.bdai.com d1
+172.31.0.244      d2.bdai.com d2
+172.31.4.72       d3.bdai.com d3
 ```
 
 * Reboot each of the nodes
