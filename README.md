@@ -982,6 +982,7 @@ ALTER TABLE default.authors SET LOCATION "/user/training/authors";
 ```
 ## test hive query
 ```
+drop table results purge;
 create table results
 stored as textfile
 as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_posts
@@ -991,6 +992,7 @@ as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_
  ;
  ```
 
+mysql에 테이블 생성 후 데이터 삭제
  ```
  create table results
  as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_posts
@@ -999,4 +1001,19 @@ as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_
   group by a.id, a.first_name, a.last_name;
 
 delete from results;
+```
+
+
+```
+sqoop export \
+--connect jdbc:mysql://cm:3306/test \
+--username training \
+--password 1q2w3e4r \
+--table results \
+--export-dir /user/hive/warehouse/results \
+--input-fields-terminated-by "\001"
+```
+OR   
+```
+sqoop export --connect jdbc:mysql://cm:3306/test --username centos --password 1q2w3e4r --table results --hcatalog-table results
 ```
