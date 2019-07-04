@@ -262,6 +262,9 @@ sudo rpm --import https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/RPM-GPG-KE
 #### Step 2: Install Java Development Kit
 https://www.cloudera.com/documentation/enterprise/5-15-x/topics/cdh_ig_jdk_installation.html
 
+https://download.oracle.com/otn/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz
+
+
 #### Step 3: Install Cloudera Manager Server
 ```
 sudo yum install cloudera-manager-daemons cloudera-manager-server
@@ -437,3 +440,563 @@ Install the mysql connector or mariadb connector Create the necessary users and 
 •
 Start the CM server and prepare to install the cluster through the CM GUI installation process
 Do not continue until you can browse your CM instance at port 7180
+
+
+
+
+Install JDK 1.8 (All nodes)
+install jdk
+# Installing the JDK Manually
+# https://www.cloudera.com/documentation/enterprise/5-15-x/topics/cdh_ig_jdk_installation.html#topic_29_1
+# jdk를 local 다운로드 받아서 각 노드에 복사
+
+```
+wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" https://download.oracle.com/otn/java/jdk/8u202-b08/1961070e4c9b4e26a04e7f5a083f551e/jdk-8u202-linux-x64.tar.gz
+```
+
+sudo mkdir -p /usr/java
+sudo tar xvfz /home/centos/jdk-8u202-linux-x64.tar.gz -C /usr/java/
+setup java path
+# JAVA 경로 지정
+sudo vi /etc/profile # export JAVA_HOME=/usr/java/jdk1.8.0_202 추가
+source /etc/profile
+env | grep JAVA_HOME
+# JAVA_HOME 출력되면 성공
+
+
+20190704 시작
+#
+## SSH 접속
+```
+ssh -i xxx.pem id@ip
+```
+
+### SSH 접속 시 권한 문제 발생시 해결 방법
+```
+chomd 600 xxx.pem
+```
+* 참고 : https://naleejang.tistory.com/40
+
+
+
+## check hostname resolution
+ first put something in /etc/hosts and then
+
+```
+# 호스##에 등록된 정보 확인
+getent hosts cm.bdai.com
+```
+
+** setup a password for centos
+```
+sudo passwd centos
+sudo vi /etc/ssh/sshd_config
+	change ->
+PasswordAuthentication yes
+sudo systemctl restart sshd.service
+```
+
+## Update /etc/host
+
+```
+sudo vi /etc/hosts
+#	add ->
+#******* THIS IS PRIVATE IP
+172.31.10.5     cm.bdai.com     cm
+172.31.1.196    d1.bdai.com     d1
+172.31.5.204    d2.bdai.com     d2
+172.31.7.82     d3.bdai.com     d3
+172.31.1.17     d4.bdai.com     d4
+```
+
+
+## Change the hostname
+해당 서버에 맞는 호스트명으로 변경
+```
+# cm server
+sudo hostnamectl set-hostname cm.bdai.com
+hostname -f
+
+# d1 server
+sudo hostnamectl set-hostname d1.bdai.com
+hostname -f
+
+# d2 server
+sudo hostnamectl set-hostname d2.bdai.com
+hostname -f
+
+# d3 server
+sudo hostnamectl set-hostname d3.bdai.com
+hostname -f
+
+# d4 server
+sudo hostnamectl set-hostname d4.bdai.com
+hostname -f
+
+```
+
+## REBOOT THE SERVER AND CHECK
+```
+reboot
+```
+
+
+## Install JDK on all machines
+// From the Mac
+```
+cd ~/Downloads
+scp -i ~/KeyPair/SKT.pem ~/Downloads/jdk-8u201-linux-x64.rpm ec2-user@ad3:. &
+// From each of the nodes
+sudo -i rpm -ivh /home/centos/jdk-8u201-linux-x64.rpm
+```
+OR
+```
+yum list java*jdk-devel
+sudo yum install -y java-1.8.0-openjdk-devel.x86_64
+#sudo yum install -y oracle-j2sdk1.8
+```
+
+
+
+**아래 부분은 cm에서만 진행**
+
+## Configure repository
+```
+sudo yum install -y wget
+sudo wget https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/cloudera-manager.repo \
+-P /etc/yum.repos.d/
+```
+
+## change the baseurl within cloudera-manager.repo to fit the version you want to install
+```
+#맞는 버전 확인하기
+https://www.cloudera.com/documentation/enterprise/release-notes/topics/cm_vd.html
+
+sudo vi /etc/yum.repos.d/cloudera-manager.repo
+-> 아래 내용 변경
+baseurl=https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/5.15.2/
+
+sudo rpm --import \
+https://archive.cloudera.com/cm5/redhat/7/x86_64/cm/RPM-GPG-KEY-cloudera
+java -version
+```
+
+## Install Cloudera Manager
+```
+sudo yum install -y cloudera-manager-daemons cloudera-manager-server
+```
+
+
+## Install MariaDB
+```
+sudo yum install -y mariadb-server
+```
+
+{ // use this repo in case yum install does not work
+sudo vi /etc/yum.repos.d/MariaDB.repo
+	add ->
+sudo rpm --import https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+}
+
+```
+** 실습 시에는 아래 구성을 변경할 필요 없다.
+sudo vi /etc/my.cnf
+	add ->
+******************************************** Don't add this line
+
+[mysqld]
+datadir=/var/lib/mysql
+socket=/var/lib/mysql/mysql.sock
+transaction-isolation = READ-COMMITTED
+# Disabling symbolic-links is recommended to prevent assorted security risks;
+# to do so, uncomment this line:
+symbolic-links = 0
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+
+key_buffer = 16M
+key_buffer_size = 32M
+max_allowed_packet = 32M
+thread_stack = 256K
+thread_cache_size = 64
+query_cache_limit = 8M
+query_cache_size = 64M
+query_cache_type = 1
+
+max_connections = 550
+#expire_logs_days = 10
+#max_binlog_size = 100M
+
+#log_bin should be on a disk with enough free space.
+#Replace '/var/lib/mysql/mysql_binary_log' with an appropriate path for your
+#system and chown the specified folder to the mysql user.
+log_bin=/var/lib/mysql/mysql_binary_log
+
+#In later versions of MariaDB, if you enable the binary log and do not set
+#a server_id, MariaDB will not start. The server_id must be unique within
+#the replicating group.
+server_id=1
+
+binlog_format = mixed
+
+read_buffer_size = 2M
+read_rnd_buffer_size = 16M
+sort_buffer_size = 8M
+join_buffer_size = 8M
+
+# InnoDB settings
+innodb_file_per_table = 1
+innodb_flush_log_at_trx_commit  = 2
+innodb_log_buffer_size = 64M
+innodb_buffer_pool_size = 4G
+innodb_thread_concurrency = 8
+innodb_flush_method = O_DIRECT
+innodb_log_file_size = 512M
+
+[mysqld_safe]
+log-error=/var/log/mariadb/mariadb.log
+pid-file=/var/run/mariadb/mariadb.pid
+
+#
+# include all files from the config directory
+#
+!includedir /etc/my.cnf.d
+******************************************** Don't add this line
+```
+
+MariaDB 설정
+```
+sudo systemctl enable mariadb
+sudo systemctl start mariadb
+sudo /usr/bin/mysql_secure_installation
+
+# 아래와 같이 세팅하면 됨
+
+Set root password? [Y/n] Y
+New password:
+Re-enter new password:
+Password updated successfully!
+Reloading privilege tables..
+ ... Success!
+
+
+By default, a MariaDB installation has an anonymous user, allowing anyone
+to log into MariaDB without having to have a user account created for
+them.  This is intended only for testing, and to make the installation
+go a bit smoother.  You should remove them before moving into a
+production environment.
+
+Remove anonymous users? [Y/n] Y
+ ... Success!
+
+Normally, root should only be allowed to connect from 'localhost'.  This
+ensures that someone cannot guess at the root password from the network.
+
+Disallow root login remotely? [Y/n] N
+ ... skipping.
+
+By default, MariaDB comes with a database named 'test' that anyone can
+access.  This is also intended only for testing, and should be removed
+before moving into a production environment.
+
+Remove test database and access to it? [Y/n] Y
+ - Dropping test database...
+ ... Success!
+ - Removing privileges on test database...
+ ... Success!
+
+Reloading the privilege tables will ensure that all changes made so far
+will take effect immediately.
+
+Reload privilege tables now? [Y/n] Y
+ ... Success!
+
+Cleaning up...
+
+All done!  If you've completed all of the above steps, your MariaDB
+installation should now be secure.
+
+Thanks for using MariaDB!
+```
+
+
+## Install mysql connector
+// From the mac
+```
+scp -i ~/KeyPair/SEBC_HP.pem ~/Downloads/mysql-connector-java-5.1.47.tar.gz ec2-user@acm:.
+```
+OR
+```
+sudo wget https://dev.mysql.com/get/Downloads/Connector-J/mysql-connector-java-5.1.47.tar.gz
+```
+```
+// From cm node
+cd /home/centos
+
+tar zxvf mysql-connector-java-5.1.47.tar.gz
+sudo mkdir -p /usr/share/java/
+
+cd mysql-connector-java-5.1.47
+
+sudo cp mysql-connector-java-5.1.47-bin.jar /usr/share/java/mysql-connector-java.jar
+```
+
+## Create the databases and users in MariaDB
+```
+mysql -u root -p
+```
+
+
+## Create the databases and users in MariaDB
+```
+mysql -u root -p
+
+CREATE DATABASE scm DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON scm.* TO 'scm'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE amon DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON amon.* TO 'amon'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE rman DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON rman.* TO 'rman'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE hue DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON hue.* TO 'hue'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE metastore DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON metastore.* TO 'metastore'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE sentry DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON sentry.* TO 'sentry'@'%' IDENTIFIED BY '1q2w3e4r';
+
+CREATE DATABASE oozie DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+GRANT ALL ON oozie.* TO 'oozie'@'%' IDENTIFIED BY '1q2w3e4r';
+
+FLUSH PRIVILEGES;
+SHOW DATABASES;
+EXIT;
+```
+
+
+## Setup the CM database
+```
+sudo /usr/share/cmf/schema/scm_prepare_database.sh mysql scm scm 1q2w3e4r
+
+sudo rm /etc/cloudera-scm-server/db.mgmt.properties
+
+sudo systemctl start cloudera-scm-server
+
+sudo tail -f /var/log/cloudera-scm-server/cloudera-scm-server.log
+
+# INFO - 아래 로그가 보이면 성공 WebServerImpl:com.cloudera.server.cmf.WebServerImpl: Started Jetty server.
+
+```
+
+
+
+```
+# 아래 로그가 보인다면 성공
+# INFO WebServerImpl:com.cloudera.server.cmf.WebServerImpl: Started Jetty server.
+```
+
+## cloudera manager wizard
+
+* http://cm:7180 접속
+
+* 계정 : admin / admin
+
+* Cloudera Enterprise 체험판 선택
+
+* CDH 클러스터 설치에 대한 호스트를 지정합니다.
+ -> cm d1 d2 d3 d4
+* 패키지: 모든 패키지는 추후 세팅함
+* 동일한 아이디 비밀번호로 지정
+* 역할 할당 사용자 지정하기 ([참고문서](http://daum.net][https://www.cloudera.com/documentation/enterprise/5-15-x/topics/cm_ig_host_allocations.html#host_role_assignments))
+* 데이터베이스 설정 - 호스트, 데이터베이스, 유저, 패스워드 입력 - 테스트 연결: CM에서 각 서비스의 패키지 설치를 위한 설정
+
+
+## Install Sqoop
+1. Add Service로 이동
+2. Sqoop1 패키지 선택 (Sqoop2는 deprecated 될 가능성 있음)
+3. Gateway: 모든 노드
+
+## Install Impala
+최초에 Parcel에서 Impala를 선택했으면 또 할 필요 없음
+1. Add Service로 이동
+2. statestore: CM 노드
+3. metastore: CM 노드
+4. impalad: 모든 데이터 노드
+
+## Install Kafka
+1. parcel로 이동 (우상단 선물 그림 아이콘)
+2. KAFKA Download 버튼 클릭
+3. Distribute 버튼 클릭
+4. Activate 버튼 클릭
+5. Add Service로 이동
+6. Kafka Broker 설치: 모든 데이터 노드
+7. 옵션 설정은 전부 default로 진행
+
+
+# Let’s test out our cluster
+
+
+## create user “training” in linux (All nodes)
+```
+sudo su
+adduser training
+usermod -aG wheel training
+exit
+sudo su training
+groups
+# training wheel -> wheel 추가 확인
+```
+
+## create user “training” in hdfs
+```
+su hdfs
+hdfs dfs -mkdir /user/training
+hdfs dfs -chown training:training /user/training
+hdfs dfs -ls /user
+```
+
+## create the sample tables that will be used for the rest of the test
+```
+# zip 파일들을 미리 1번 노드에 업로드 함
+scp ~/Desktop/dlp/authors.zip centos@cm:.
+
+# 실습 파일을 이용
+sudo mv *.zip /training
+sudo chmod training:training *.zip
+su - training
+unzip -Z authors.sql.zip
+unzip -Z posts23.sql.zip
+mysql -u root -p
+```
+아라 sql 파일에 테이블 생성부터 데이터 입력 스크립트가 있음
+```
+CREATE DATABASE test DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci;
+use test;
+source /home/training/authors.sql
+source /home/training/posts23.sql
+
+create user 'training'@'localhost' identified by 'training';
+create user 'training'@'%' identified by 'training';
+grant all on test.* to 'training'@'%' identified by 'test';
+GRANT ALL ON *.* TO 'training'@'%' IDENTIFIED BY 'training';
+select user,host from mysql.user where user='training' ;
+exit;
+```
+
+```
+create user 'centos'@'localhost' identified by '1q2w3e4r';
+create user 'centos'@'%' identified by '1q2w3e4r';
+GRANT ALL ON *.* TO 'centos'@'%' IDENTIFIED BY '1q2w3e4r';
+```
+
+
+## extract tables posts from the database and create Hive tables (managed)
+sqooping posts table
+```
+# target_dir 옵션을 넣으면 경로 변경 가능
+
+sqoop import --connect jdbc:mysql://cm:3306/test \
+--username centos \
+--password 1q2w3e4r \
+--split-by id \
+--columns id,author_id,title,description,content,date \
+--table posts \
+--fields-terminated-by "\t" \
+--hive-table default.posts \
+--create-hive-table \
+--hive-import
+
+# 모든 서버에 training 계정 생성
+sqoop import --connect jdbc:mysql://cm:3306/test \
+--username training \
+--password 1q2w3e4r \
+--split-by id \
+--columns id,author_id,title,description,content,date \
+--table posts \
+--fields-terminated-by "\t" \
+--hive-table default.posts \
+--create-hive-table \
+--hive-import
+
+```
+
+```
+sudo su training
+
+hdsf dfs -ls
+```
+
+## extract tables authors from the database and create Hive tables (external)
+sqooping authors table
+```
+sqoop import --connect jdbc:mysql://cm:3306/test \
+--username centos \
+--password 1q2w3e4r \
+--split-by id \
+--columns id,first_name,last_name,email,birthdate,added \
+--table authors \
+--fields-terminated-by "\t" \
+--hive-table default.authors \
+--create-hive-table \
+--hive-import
+
+sqoop import --connect jdbc:mysql://cm:3306/test \
+--username training \
+--password 1q2w3e4r \
+--split-by id \
+--columns id,first_name,last_name,email,birthdate,added \
+--table authors \
+--fields-terminated-by "\t" \
+--hive-table default.authors \
+--create-hive-table \
+--hive-import
+```
+
+```
+#
+hive
+
+ALTER TABLE default.authors SET TBLPROPERTIES('EXTERNAL'='TRUE');
+```
+
+```
+hive
+desc foramtted default.authros;
+```
+
+## copy
+```
+hdfs dfs -cp /user/hive/warehouse/authors /user/training/
+```
+```
+-- change hdfs path on schema
+USE default;
+DESC extended default.authors;
+ALTER TABLE default.authors SET LOCATION "/user/training/authors";
+```
+## test hive query
+```
+create table results
+stored as textfile
+as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_posts
+ from authors a
+ join posts p on (a.id = p.author_id)
+ group by a.id, a.first_name, a.last_name
+ ;
+ ```
+
+ ```
+ create table results
+ as select a.id as id, a.first_name as fname, a.last_name as lname, count(*) num_posts
+  from authors a
+  join posts p on (a.id = p.author_id)
+  group by a.id, a.first_name, a.last_name;
+
+delete from results;
+```
