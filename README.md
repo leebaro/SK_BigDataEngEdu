@@ -1017,3 +1017,35 @@ OR
 ```
 sqoop export --connect jdbc:mysql://cm:3306/test --username centos --password 1q2w3e4r --table results --hcatalog-table results
 ```
+
+
+
+
+## Install spark2 as an additional service. Follow the instructions here:
+https://www.cloudera.com/documentation/spark2/latest/topics/spark2.html
+
+1. CDS Versions Available for Download
+https://www.cloudera.com/documentation/spark2/latest/topics/spark2_packaging.html
+
+2. Pacel repository 등록
+http://archive.cloudera.com/spark2/parcels/2.4.0.cloudera2/
+
+3. Custom Service Descriptor
+https://www.cloudera.com/documentation/enterprise/latest/topics/cm_mc_addon_services.html#concept_qbv_3jk_bn__section_xvc_yqj_bn
+jar 파일을 /opt/cloudera/csd 경로에 저장
+
+```
+sudo wget http://archive.cloudera.com/spark2/csd/SPARK2_ON_YARN-2.4.0.cloudera2.jar
+
+#csd 파일 권한 변경
+sudo chown cloudera-scm:cloudera-scm SPARK2_ON_YARN-2.4.0.cloudera2.jar
+sudo chmod 644 SPARK2_ON_YARN-2.4.0.cloudera2.jar
+
+#cloudera manager restart
+sudo systemctl restart cloudera-scm-server
+```
+
+4. 스파크 서비스 추가
+  1. cm에서 서비스 추가 클릭
+  1. spark2 선택
+  1. spark with hive 선택
