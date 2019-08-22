@@ -148,6 +148,22 @@ pyspark> ipsRDD.saveAsTextFile("/loudacre/islist")
 ## Bonus exercise
 
 
+Display the data in the form ipaddress/userid, such as:
+```
+165.32.101.206/8
+100.219.90.44/102
+182.4.148.56/173
+246.241.6.175/45395
+175.223.172.207/4115
+…
+```
+
+```
+ipUseridRDD = \
+logsRDD.map(lambda line: line.split(' ')).map(lambda line: line[0]+'/'+line[2])
+```
+
+
 # Hands-On Exercise: Process Data Files with Apache Spark
 
 In this exercise, you will parse a set of activation records in XML format to extract the account numbers and model names.
